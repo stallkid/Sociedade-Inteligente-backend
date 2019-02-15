@@ -1,5 +1,5 @@
 # Sociedade-Inteligente
-Software feito em Python com a micro-framework Flask e ORM SQLAlchemy para identificanção e perfilamento por reconhecimento facil.
+Software feito em Python com a micro-framework Flask e ORM SQLAlchemy para identificanção e perfilamento por reconhecimento facial.
 
 ## Setup do Projeto
 Ir até a pasta onde deseja clonar pelo terminal e rodar o comando $ git clone https://github.com/stallkid/Sociedade-Inteligente.git.
