@@ -12,8 +12,16 @@ navegar até a raiz do projeto e baixar as dependencias pelo comando $ pip insta
 - No arquivo config.py renomeado alterar "banco_de_dados" para o nome do banco criado localmente
 
 Apos as alterações acima, rodar os seguintes scripts na raiz do projeto:
-- $ python migrate.py db init
 - $ python migrate.py db migrate
-- $ python migrate.py db upgrade
 ## Rodar a aplicação
 Na raiz do projeto escrever no terminal o comando $ python run.py.
+
+## Comandos de Migrate
+Comandos para criar, subir e alterar o migrate
+### Cria o Migrate
+$ python migrate.py db init
+### Sobe o Migrate do arquivo para o banco de dados
+$ python migrate.py db migrate
+### Aplica as alterações das Models ao arquivo de Migrate
+$ python migrate.py db upgrade
+
