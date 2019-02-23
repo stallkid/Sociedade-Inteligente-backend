@@ -12,21 +12,15 @@ class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.String(100), unique=True, nullable=False)
     senha = db.Column(db.String(100), nullable=False)
-    atributos_id = db.Column(db.Integer, db.ForeignKey('atributos.id',
-    ondelete='CASCADE'), nullable=False)
-    atributos = db.relationship('Atributos', backref=db.backref('usuarios',
-    lazy='dynamic' ))
 
-    def __init__(self, login, senha, atributos_id):
+    def __init__(self, login, senha):
         self.login = login
         self.senha = senha
-        self.atributos_id = atributos_id
 
-class UsuariosSchema(ma.Schema):
+class UsuarioSchema(ma.Schema):
     id = fields.Integer()
     login = fields.String(required=True)
     senha = fields.String(required=True)
-    atributos_id = fields.Integer(required=True)
 
 class Atributos(db.Model):
     __tablename__ = 'atributos'
@@ -37,44 +31,19 @@ class Atributos(db.Model):
     idade = db.Column(db.Integer,nullable=False)
     sexo = db.Column(db.String(15), nullable=False)
     estadoCivil = db.Column(db.String(50), nullable=False)
-    dataDeNascimento = db.Column(db.DateTime, nullable=False)
+    dataDeNascimento = db.Column(db.Date, nullable=False)
 
-    endereco_id = db.Column(db.Integer, db.ForeignKey('enderecos.id',
-    ondelete='CASCADE'), nullable=True)
-    enderecos = db.relationship('Enderecos', backref=db.backref('atributos',
-    lazy='dynamic'))
-
-    telefone_id = db.Column(db.Integer, db.ForeignKey('telefones.id',
-    ondelete='CASCADE'), nullable=True)
-    telefones = db.relationship('Telefones', backref=db.backref('atributos',
-    lazy='dynamic'))
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id',
+                                                         ondelete='CASCADE'), nullable=True)
+    usuario = db.relationship('Usuario', backref=db.backref('atributos',
+                                                                     lazy='dynamic'))
 
     # fichaMedica_id = db.Column(db.Integer, db.ForeignKey('fichaMedica.id',
     # ondelete='CASCADE'), nullable=True)
     # fichaMedicas = db.relationship('FichaMedica', backref=db.backref('atributos',
     # lazy='dynamic'))
-    
-    # familiares_id = db.Column(db.Integer, db.ForeignKey('familiares.id',
-    # ondelete='CASCADE'), nullable=True)
-    # familiares = db.relationship('Familiares', backref=db.backref('atributos',
-    # lazy='dynamic'))
 
-    # profissao_id = db.Column(db.Integer, db.ForeignKey('profissao.id',
-    # ondelete='CASCADE'), nullable=True)
-    # profissao = db.relationship('Profissao', backref=db.backref('atributos',
-    # lazy='dynamic'))
-
-    # escolaridade_id = db.Column(db.Integer, db.ForeignKey('escolaridade.id',
-    # ondelete='CASCADE'), nullable=True)
-    # escolaridade = db.relationship('Escolaridade', backref=db.backref('atributos',
-    # lazy='dynamic'))
-
-    # email_id = db.Column(db.Integer, db.ForeignKey('email.id',
-    # ondelete='CASCADE'), nullable=True)
-    # email = db.relationship('Email', backref=db.backref('atributos',
-    # lazy='dynamic'))
-
-    def __init__(self, nome, cpf, rg, idade, sexo, estadoCivil, dataDeNascimento, endereco_id, telefone_id, fichaMedica_id, familiares_id, profissao_id, escolaridade_id, email_id):
+    def __init__(self, nome, cpf, rg, idade, sexo, estadoCivil, dataDeNascimento, usuario_id):
         self.nome = nome
         self.cpf = cpf
         self.rg = rg
@@ -82,13 +51,7 @@ class Atributos(db.Model):
         self.sexo = sexo
         self.estadoCivil = estadoCivil
         self.dataDeNascimento = dataDeNascimento
-        self.endereco_id = endereco_id
-        self.telefone_id = telefone_id
-        self.fichaMedica_id = fichaMedica_id
-        self.familiares_id = familiares_id
-        self.profissao_id = profissao_id
-        self.escolaridade_id = escolaridade_id
-        self.email_id = email_id
+        self.usuario_id = usuario_id
 
 
 class AtributosSchema(ma.Schema):
@@ -99,50 +62,64 @@ class AtributosSchema(ma.Schema):
     idade = fields.Integer(required=True)
     sexo = fields.String(required=True)
     estadoCivil = fields.String(required=True)
-    dataDeNascimento = fields.DateTime()
-    endereco_id = fields.Integer(required=False)
-    telefone_id = fields.Integer(required=False)
-    # fichaMedica_id = fields.Integer(required=False)
-    # familiares_id = fields.Integer(required=False)
-    # profissao_id = fields.Integer(required=False)
-    # escolaridade_id = fields.Integer(required=False)
-    # email_id = fields.Integer(required=False)
+    dataDeNascimento = fields.Date(required=True)
+    usuario_id = fields.Integer(required=True)
 
 class Enderecos(db.Model):
     __tablename__ = 'enderecos'
     id = db.Column(db.Integer, primary_key=True)
-    logradouro = db.Column(db.String(150), nullable=False)
-    endereco = db.Column(db.String(150), nullable=False)
+    cep = db.Column(db.String(30), nullable=False)
+    bairro = db.Column(db.String(100), nullable=False)
+    cidade = db.Column(db.String(100), nullable=False)
+    estado = db.Column(db.String(100), nullable=False)
     numero = db.Column(db.Integer, nullable=False)
     complemento = db.Column(db.String(150), nullable=False)
+
+    atributos_id = db.Column(db.Integer, db.ForeignKey('atributos.id',
+    ondelete='CASCADE'), nullable=False)
+    atributos = db.relationship('Atributos', backref=db.backref('enderecos',
+    lazy='dynamic'))
     # fk_cidade_id
     # fk_ceprua_id
 
-    def __init__(self, logradouro, endereco, numero, complemento):
-        self.logradouro = logradouro
-        self.endereco - endereco
+    def __init__(self, cep, bairro, cidade, estado, numero, complemento, atributos_id):
+        self.cep = cep
+        self.bairro = bairro
+        self.cidade = cidade
+        self.estado = estado
         self.numero = numero
         self.complemento = complemento
+        self.atributos_id = atributos_id
 
 class EnderecosSchema(ma.Schema):
     id = fields.Integer()
-    logradouro = fields.String(required=True)
-    endereco = fields.String(required=True)
+    cep = fields.String(required=True)
+    bairro = fields.String(required=True)
+    cidade = fields.String(required=True)
+    estado = fields.String(required=True)
     numero = fields.Integer(required=True)
     complemento = fields.String(required=True)
+    atributos_id = fields.Integer(required=True)
 
 class Telefones(db.Model):
+    __tablename__ = 'telefones'
     id = db.Column(db.Integer, primary_key=True)
     tipo = db.Column(db.String(30), nullable=False)
     ddd = db.Column(db.String(5), nullable=False)
     numero = db.Column(db.String(20), nullable=False)
     operadora = db.Column(db.String(50), nullable=True)
 
-    def __init__(self, tipo, ddd, numero, operadora):
+    atributos_id = db.Column(db.Integer, db.ForeignKey('atributos.id',
+                                                       ondelete='CASCADE'), nullable=False)
+    atributos = db.relationship('Atributos', backref=db.backref('telefones',
+                                                            lazy='dynamic'))
+
+    def __init__(self, tipo, ddd, numero, operadora, atributos_id):
         self.tipo = tipo
         self.ddd = ddd
         self.numero = numero
         self.operadora = operadora
+        self.atributos_id = atributos_id
 
 class TelefonesSchema(ma.Schema):
     id = fields.Integer()
@@ -150,6 +127,110 @@ class TelefonesSchema(ma.Schema):
     ddd = fields.String(required=True)
     numero = fields.String(required=True)
     operadora = fields.String(required=False)
+    atributos_id = fields.Integer(required=True)
+
+class Familiares(db.Model):
+    __tablename__ = 'familiares'
+    id = db.Column(db.Integer, primary_key=True)
+    relacao = db.Column(db.String(150), nullable=False)
+
+    atributos_id = db.Column(db.Integer, db.ForeignKey('atributos.id',
+                                                       ondelete='CASCADE'), nullable=False)
+    atributos = db.relationship('Atributos', backref=db.backref('familiares',
+                                                            lazy='dynamic'))
+
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id',
+                                                     ondelete='CASCADE'), nullable=True)
+    usuario = db.relationship('Usuario', backref=db.backref('familiares',
+                                                            lazy='dynamic'))
+
+    def __init__(self, relacao, atributos_id, usuario_id):
+        self.relacao = relacao
+        self.atributos_id = atributos_id
+        self.usuario_id = usuario_id
+
+class FamiliaresSchema(ma.Schema):
+    id = fields.Integer()
+    relacao = fields.String(required=True)
+    atributos_id = fields.Integer(required=True)
+    usuario_id = fields.Integer(required=True)
+
+class Profissoes(db.Model):
+    __tablename__ = 'profissoes'
+    id = db.Column(db.Integer, primary_key=True)
+    empresa = db.Column(db.String(250), nullable=False)
+    cargo = db.Column(db.String(250), nullable=False)
+    dataInicio = db.Column(db.Date, nullable=False)
+    dataTermino = db.Column(db.Date, nullable=True)
+    atributos_id = db.Column(db.Integer, db.ForeignKey('atributos.id',
+                                                       ondelete='CASCADE'), nullable=False)
+    atributos = db.relationship('Atributos', backref=db.backref('profissoes',
+                                                                lazy='dynamic'))
+
+    def __init__(self, empresa, cargo, dataInicio, dataTermino, atributos_id):
+        self.empresa = empresa
+        self.cargo = cargo
+        self.dataInicio = dataInicio
+        self.dataTermino = dataTermino
+        self.atributos_id = atributos_id
+
+class ProfissaoSchema(ma.Schema):
+    id = fields.Integer()
+    empresa = fields.String(required=True)
+    cargo = fields.String(required=True)
+    dataInicio = fields.Date(required=True)
+    dataTermino = fields.Date(required=False)
+    atributos_id = fields.Integer(required=True)
+
+class Escolaridade(db.Model):
+    __tablename__ = 'escolaridade'
+    id = db.Column(db.Integer, primary_key=True)
+    instituicao = db.Column(db.String(250), nullable=False)
+    curso = db.Column(db.String(150), nullable=False)
+    grau = db.Column(db.String(150), nullable=False)
+    status = db.Column(db.String(150), nullable=False)
+    inicio = db.Column(db.Date, nullable=False)
+    termino = db.Column(db.Date, nullable=False)
+    atributos_id = db.Column(db.Integer, db.ForeignKey('atributos.id',
+                                                       ondelete='CASCADE'), nullable=False)
+    atributos = db.relationship('Atributos', backref=db.backref('escolaridade',
+                                                                lazy='dynamic'))
+
+    def __init__(self, instituicao, curso, grau, status, inicio, termino, atributos_id):
+        self.instituicao = instituicao
+        self.curso = curso
+        self.grau = grau
+        self.status = status
+        self.inicio = inicio
+        self.termino = termino
+        self.atributos_id = atributos_id
+
+class EscolaridadeSchema(ma.Schema):
+    id = fields.Integer()
+    instituicao = fields.String(required=True)
+    curso = fields.String(required=True)
+    grau = fields.String(required=True)
+    status = fields.String(required=True)
+    inicio = fields.Date(required=True)
+    termino = fields.Date(required=True)
+
+class Email(db.Model):
+    __tablename__ = 'email'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(250), nullable=False)
+    atributos_id = db.Column(db.Integer, db.ForeignKey('atributos.id',
+                                                       ondelete='CASCADE'), nullable=False)
+    atributos = db.relationship('Atributos', backref=db.backref('email',
+                                                                lazy='dynamic'))
+
+    def __init__(self, email, atributos_id):
+        self.email = email
+        self.atributos_id = atributos_id
+
+class EmailSchema(ma.Schema):
+    id = fields.Integer()
+    email = fields.String(required=True)
+    atributos_id = fields.Integer(required=True)
 
 
 
