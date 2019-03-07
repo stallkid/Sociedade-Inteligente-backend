@@ -19,8 +19,8 @@ class Usuario(db.Model):
 
 class UsuarioSchema(ma.Schema):
     id = fields.Integer()
-    login = fields.String(required=True)
-    senha = fields.String(required=True)
+    # login = fields.String(required=True)
+    # senha = fields.String(required=True)
 
 class Atributos(db.Model):
     __tablename__ = 'atributos'

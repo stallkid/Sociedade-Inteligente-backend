@@ -9,23 +9,41 @@ profissao_schema = ProfissaoSchema()
 endereco_schema = EnderecosSchema()
 
 class SociedadeResource(Resource):
-    def get(self):
-        usuarios = Usuario.query.filter_by(id=1).first()
+
+    def get(self, person_id):
+
+        usuarios = Usuario.query.filter_by(id=person_id).first()
         usuarios = usuario_schema.dump(usuarios).data
-        atributos = Atributos.query.filter_by(usuario_id=1).first()
-        atributos = atributo_schema.dump(atributos).data
-        profissoes = Profissoes.query.filter_by(atributos_id=1).first()
-        profissoes = profissao_schema.dump(profissoes).data
-        enderecos = Enderecos.query.filter_by(atributos_id=1).first()
-        enderecos = endereco_schema.dump(enderecos).data
 
-        sociedadeData = {
-            "usuarios": usuarios,
-            "atributos": atributos,
-            "enderecos": enderecos,
-            "profissoes": profissoes
-        }
+        if usuarios:
+            atributos = Atributos.query.filter_by(usuario_id=usuarios["id"]).first()
+            atributos = atributo_schema.dump(atributos).data
 
-        result = sociedadeData
+            profissoes = Profissoes.query.filter_by(atributos_id=atributos["id"]).first()
+            profissoes = profissao_schema.dump(profissoes).data
+
+            enderecos = Enderecos.query.filter_by(atributos_id=atributos["id"]).first()
+            enderecos = endereco_schema.dump(enderecos).data
+
+            sociedadeData = {
+                "usuarios": usuarios,
+                "atributos": atributos,
+                "enderecos": enderecos,
+                "profissoes": profissoes
+            }
+            status = "sucesso"
+            result = sociedadeData
+            response_status = 200
         
-        return {'status': 'success', 'data': result}, 200
+            
+            pass
+        else:
+            status = "erro"
+            result = "Usuario não encontrado"
+            response_status = 404
+            pass
+
+        return {'status': status, 'data': result }, response_status
+        
+
+        
