@@ -2,6 +2,8 @@ from flask import Flask
 from marshmallow import Schema, fields, pre_load, validate
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+import hashlib
 
 
 ma = Marshmallow()
@@ -15,12 +17,16 @@ class Usuario(db.Model):
 
     def __init__(self, login, senha):
         self.login = login
-        self.senha = senha
+        self.senha = self.encrypt_string(senha)
+
+    def encrypt_string(self, hash_string):
+        sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
+        return sha_signature
 
 class UsuarioSchema(ma.Schema):
     id = fields.Integer()
     login = fields.String(required=True)
-    # senha = fields.String(required=True)
+    senha = fields.String(required=True)
 
 class Atributos(db.Model):
     __tablename__ = 'atributos'
