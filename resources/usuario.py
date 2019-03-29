@@ -25,7 +25,8 @@ class UsuarioResource(Resource):
             return {'message': 'Este usuario já existe'}, 400
         usuario = Usuario(
             login=json_data['login'],
-            senha=json_data['senha']
+            senha=json_data['senha'],
+            permissao_id=json_data['permissao_id']
         )
 
         db.session.add(usuario)

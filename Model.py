@@ -14,10 +14,15 @@ class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.String(100), unique=True, nullable=False)
     senha = db.Column(db.String(100), nullable=False)
+    permissao_id = db.Column(db.Integer, db.ForeignKey('permissoes.id',
+                                                         ondelete='CASCADE'), nullable=True)
+    permissao = db.relationship('Permissao', backref=db.backref('usuarios',
+                                                                     lazy='dynamic'))
 
-    def __init__(self, login, senha):
+    def __init__(self, login, senha, permissao_id):
         self.login = login
         self.senha = self.encrypt_string(senha)
+        self.permissao_id = permissao_id
 
     def encrypt_string(self, hash_string):
         sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
@@ -27,6 +32,19 @@ class UsuarioSchema(ma.Schema):
     id = fields.Integer()
     login = fields.String(required=True)
     senha = fields.String(required=True)
+    permissao_id = fields.Integer(required=True)
+
+class Permissao(db.Model):
+    __tablename__ = 'permissoes'
+    id = db.Column(db.Integer, primary_key=True)
+    nivel = db.Column(db.String(100), unique=True, nullable=False)
+
+    def __init__(self, nivel):
+        self.nivel = nivel
+
+class PermissaoSchema(ma.Schema):
+    id = fields.Integer()
+    nivel = fields.String(required=True)
 
 class Atributos(db.Model):
     __tablename__ = 'atributos'
