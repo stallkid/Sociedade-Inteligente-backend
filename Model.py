@@ -9,31 +9,6 @@ import hashlib
 ma = Marshmallow()
 db = SQLAlchemy()
 
-class Usuario(db.Model):
-    __tablename__ = 'usuarios'
-    id = db.Column(db.Integer, primary_key=True)
-    login = db.Column(db.String(100), unique=True, nullable=False)
-    senha = db.Column(db.String(100), nullable=False)
-    permissao_id = db.Column(db.Integer, db.ForeignKey('permissoes.id',
-                                                         ondelete='CASCADE'), nullable=True)
-    permissao = db.relationship('Permissao', backref=db.backref('usuarios',
-                                                                     lazy='dynamic'))
-
-    def __init__(self, login, senha, permissao_id):
-        self.login = login
-        self.senha = self.encrypt_string(senha)
-        self.permissao_id = permissao_id
-
-    def encrypt_string(self, hash_string):
-        sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
-        return sha_signature
-
-class UsuarioSchema(ma.Schema):
-    id = fields.Integer()
-    login = fields.String(required=True)
-    senha = fields.String(required=True)
-    permissao_id = fields.Integer(required=True)
-
 class Permissao(db.Model):
     __tablename__ = 'permissoes'
     id = db.Column(db.Integer, primary_key=True)
@@ -46,48 +21,69 @@ class PermissaoSchema(ma.Schema):
     id = fields.Integer()
     nivel = fields.String(required=True)
 
-class Atributos(db.Model):
-    __tablename__ = 'atributos'
-    id = db.Column(db.Integer,primary_key=True)
-    nome = db.Column(db.String(250), unique=True, nullable=False)
-    cpf = db.Column(db.String(30), unique=True, nullable=False)
-    rg = db.Column(db.String(30), unique=True, nullable=False)
-    idade = db.Column(db.Integer,nullable=False)
-    sexo = db.Column(db.String(15), nullable=False)
-    estadoCivil = db.Column(db.String(50), nullable=False)
-    dataDeNascimento = db.Column(db.Date, nullable=False)
+class Delitos(db.Model):
+    __tablename__ = 'delitos'
+    id = db.Column(db.Integer, primary_key=True)
+    artigo = db.Column(db.Integer, nullable=False)
+    processo= db.Column(db.String(250), nullable=False)
+    usuarios = db.relationship("Usuario", secondary="delitos_usuario")
 
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id',
-                                                         ondelete='CASCADE'), nullable=True)
-    usuario = db.relationship('Usuario', backref=db.backref('atributos',
-                                                                     lazy='dynamic'))
+    def __init__(self, artigo, processo):
+        self.artigo = artigo
+        self.processo = processo
 
-    # fichaMedica_id = db.Column(db.Integer, db.ForeignKey('fichaMedica.id',
-    # ondelete='CASCADE'), nullable=True)
-    # fichaMedicas = db.relationship('FichaMedica', backref=db.backref('atributos',
-    # lazy='dynamic'))
-
-    def __init__(self, nome, cpf, rg, idade, sexo, estadoCivil, dataDeNascimento, usuario_id):
-        self.nome = nome
-        self.cpf = cpf
-        self.rg = rg
-        self.idade = idade
-        self.sexo = sexo
-        self.estadoCivil = estadoCivil
-        self.dataDeNascimento = dataDeNascimento
-        self.usuario_id = usuario_id
-
-
-class AtributosSchema(ma.Schema):
+class DelitosSchema(ma.Schema):
     id = fields.Integer()
-    nome = fields.String(required=True)
-    cpf = fields.String(required=True)
-    rg = fields.String(required=True)
-    idade = fields.Integer(required=True)
-    sexo = fields.String(required=True)
-    estadoCivil = fields.String(required=True)
-    dataDeNascimento = fields.Date(required=True)
-    usuario_id = fields.Integer(required=True)
+    artigo = fields.Integer(required=True)
+    processo = fields.String(required=True)
+
+class DelitosUsuario(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id',
+                                                       ondelete='CASCADE'), nullable=False)
+    usuario = db.relationship('Usuario', backref=db.backref('DelitosUsuario',
+                                                                lazy='dynamic'))
+    delito_id = db.Column(db.Integer, db.ForeignKey('delitos.id',
+                                                       ondelete='CASCADE'), nullable=False)
+    delito = db.relationship('Delitos', backref=db.backref('DelitosUsuario',
+                                                                lazy='dynamic'))
+
+    def __init__(self, usuario_id, delito_id, delito):
+        self.usuario_id = usuario_id
+        self.delito_id = delito_id
+        self.delito = delito
+
+class DelitosUsuarioSchema(ma.Schema):
+    id = fields.Integer()
+    delito = fields.Nested(DelitosSchema)
+
+class Usuario(db.Model):
+    __tablename__ = 'usuarios'
+    id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.String(100), unique=True, nullable=False)
+    senha = db.Column(db.String(100), nullable=False)
+    permissao_id = db.Column(db.Integer, db.ForeignKey('permissoes.id',
+                                                         ondelete='CASCADE'), nullable=True)
+    permissao = db.relationship('Permissao', backref=db.backref('usuarios',
+                                                                     lazy='dynamic'))
+    delitos = db.relationship("Delitos", secondary="delitos_usuario")
+
+    def __init__(self, login, senha, permissao, delitos):
+        self.login = login
+        self.senha = self.encrypt_string(senha)
+        self.permissao = permissao
+        self.delitos = delitos
+
+    def encrypt_string(self, hash_string):
+        sha_signature = hashlib.sha256(hash_string.encode()).hexdigest()
+        return sha_signature
+
+class UsuarioSchema(ma.Schema):
+    id = fields.Integer()
+    login = fields.String(required=True)
+    senha = fields.String(required=True)
+    permissao = fields.Nested(PermissaoSchema, only=["nivel"])
+    delitos = fields.Nested(DelitosSchema, many=True, exclude=("delitos",))
 
 class Enderecos(db.Model):
     __tablename__ = 'enderecos'
@@ -255,6 +251,51 @@ class EmailSchema(ma.Schema):
     id = fields.Integer()
     email = fields.String(required=True)
     atributos_id = fields.Integer(required=True)
+
+class Atributos(db.Model):
+    __tablename__ = 'atributos'
+    id = db.Column(db.Integer,primary_key=True)
+    nome = db.Column(db.String(250), unique=True, nullable=False)
+    cpf = db.Column(db.String(30), unique=True, nullable=False)
+    rg = db.Column(db.String(30), unique=True, nullable=False)
+    idade = db.Column(db.Integer,nullable=False)
+    sexo = db.Column(db.String(15), nullable=False)
+    estadoCivil = db.Column(db.String(50), nullable=False)
+    dataDeNascimento = db.Column(db.Date, nullable=False)
+
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id',
+                                                         ondelete='CASCADE'), nullable=True)
+    usuario = db.relationship('Usuario', backref=db.backref('atributos',
+                                                                     lazy='dynamic'))
+
+    # fichaMedica_id = db.Column(db.Integer, db.ForeignKey('fichaMedica.id',
+    # ondelete='CASCADE'), nullable=True)
+    # fichaMedicas = db.relationship('FichaMedica', backref=db.backref('atributos',
+    # lazy='dynamic'))
+
+    def __init__(self, nome, cpf, rg, idade, sexo, estadoCivil, dataDeNascimento, usuario_id, endereco):
+        self.nome = nome
+        self.cpf = cpf
+        self.rg = rg
+        self.idade = idade
+        self.sexo = sexo
+        self.estadoCivil = estadoCivil
+        self.dataDeNascimento = dataDeNascimento
+        self.usuario_id = usuario_id
+        self.endereco = endereco
+
+
+class AtributosSchema(ma.Schema):
+    id = fields.Integer()
+    nome = fields.String(required=True)
+    cpf = fields.String(required=True)
+    rg = fields.String(required=True)
+    idade = fields.Integer(required=True)
+    sexo = fields.String(required=True)
+    estadoCivil = fields.String(required=True)
+    dataDeNascimento = fields.Date(required=True)
+    usuario_id = fields.Integer(required=True)
+    endereco = fields.Nested(EnderecosSchema, many=True, exclude=("atributos_id",))
 
 
 
