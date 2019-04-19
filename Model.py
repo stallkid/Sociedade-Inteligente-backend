@@ -45,8 +45,7 @@ class DelitosUsuario(db.Model):
                                                                 lazy='dynamic'))
     delito_id = db.Column(db.Integer, db.ForeignKey('delitos.id',
                                                        ondelete='CASCADE'), nullable=False)
-    delito = db.relationship('Delitos', backref=db.backref('DelitosUsuario',
-                                                                lazy='dynamic'))
+    delito = db.relationship('Delitos')
 
     def __init__(self, usuario_id, delito_id, delito):
         self.usuario_id = usuario_id
@@ -54,7 +53,6 @@ class DelitosUsuario(db.Model):
         self.delito = delito
 
 class DelitosUsuarioSchema(ma.Schema):
-    id = fields.Integer()
     delito = fields.Nested(DelitosSchema)
 
 class Usuario(db.Model):
