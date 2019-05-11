@@ -1,7 +1,6 @@
 import json
 import pandas as pd
-import artificial_intelligence.logistic_regression as lr
-import artificial_intelligence.neural_network as nn
+import artificial_intelligence.neural_network as nnia
 
 from flask import request
 from flask_restful import Resource
@@ -13,6 +12,7 @@ profissao_schema = ProfissaoSchema()
 endereco_schema = EnderecosSchema()
 delito_schema = DelitosSchema()
 delitos_usuario_schema = DelitosUsuarioSchema(many=True)
+
 
 class SociedadeResource(Resource):
 
@@ -46,9 +46,22 @@ class SociedadeResource(Resource):
                 rows.append([artigo, peso])
 
             if(len(ficha_criminal) > 0):
-                reg = nn.NeuralNetworkIA(cols, rows)
-                test = reg.neural_network()
+                df = pd.DataFrame(rows, columns=cols)
+                y = df.iloc[:,(len(cols)-1)]
+                X = df.iloc[:,:(len(cols)-1)]
+                print(X)
+                print(y)
+                test = nnia.NeuralNetworkIA()
                 print(test)
+                # y = df.iloc[:,(len(cols)-1)]
+                # X = df.iloc[:,:(len(cols)-1)]
+                # nn = nnia.NeuralNetworkIA(X,y)
+                # for i in range(1500):
+                #     nn.feedforward()
+                #     nn.backprop()
+
+                # print(nn.output)
+
             # x = df.iloc[:,1]
             # y = df.iloc[:,:1]
 
